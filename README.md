@@ -7,16 +7,12 @@ Este repositorio contiene los programas desarrollados para, dado un día concret
 - [Requisitos](#requisitos)
 - [Preparación del entorno](#preparación-del-entorno)
   - [Requisitos Previos](#requisitos-previos)
-  - [Instalación de Intel SDE](#instalación-de-intel-sde)
-  - [Instalación de QEMU](#instalación-de-qemu)
   - [Docker](#docker)
 - [Uso](#uso)
-- [Pruebas Python](#pruebas-python)
-- [Licencias](#licencias)
-- [Contacto](#contacto)
 
 
-## Preparación del entorno para Intel x86
+
+## Preparación del entorno
 
 ### Requisitos Previos
 
