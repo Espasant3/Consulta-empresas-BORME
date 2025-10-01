@@ -1,0 +1,18 @@
+# General
+!.gitignore
+
+### IntelliJ IDEA ###
+.idea
+*.iws
+*.iml
+*.ipr
+
+
+# Frontend
+
+
+
+# Backend
+
+
+
