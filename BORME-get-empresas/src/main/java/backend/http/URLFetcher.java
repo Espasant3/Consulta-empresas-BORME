@@ -1,12 +1,14 @@
-package backend;
+package backend.http;
 
+import org.springframework.stereotype.Component;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.io.IOException;
 
-public class ConsultaURL {
+@Component
+public class URLFetcher {
 
     // Constantes para códigos HTTP comunes
     public static final int HTTP_OK = 200;
@@ -30,11 +32,11 @@ public class ConsultaURL {
     private int codigoEstado;
     private String mensajeError;
 
-    public ConsultaURL() {
+    public URLFetcher() {
         this.cliente = HttpClient.newHttpClient();
     }
 
-    public ConsultaURL(String url) {
+    public URLFetcher(String url) {
         this();
         this.url = url;
     }
