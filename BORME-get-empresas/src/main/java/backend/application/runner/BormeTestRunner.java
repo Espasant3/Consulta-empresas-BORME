@@ -1,5 +1,7 @@
 package backend.application.runner;
 
+import backend.domain.ConstitucionEmpresa;
+import backend.services.BormeOrchestratorService;
 import backend.services.BormeService;
 import backend.domain.BormeResponse;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,12 +9,16 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Component
 public class BormeTestRunner implements CommandLineRunner {
 
     @Autowired
     private BormeService bormeService;
+
+    @Autowired
+    private BormeOrchestratorService bormeOrchestratorService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
@@ -24,6 +30,7 @@ public class BormeTestRunner implements CommandLineRunner {
         testFechaInvalida();
         testFechaFutura();
         testConsultaHoy();
+        testDescargaPdfs();
 
         System.out.println("=== PRUEBAS COMPLETADAS ===");
     }
@@ -92,6 +99,19 @@ public class BormeTestRunner implements CommandLineRunner {
             System.out.println("Contenido obtenido: " + (respuesta.getContenidoHtml() != null ? "SÍ" : "NO"));
         } else {
             System.out.println("Error: " + respuesta.getMensajeError());
+        }
+    }
+
+    private void testDescargaPdfs() {
+        System.out.println("\n--- Prueba 5: Descarga de PDFs ---");
+        String fecha = "2024-09-10";
+        String directorioDestino = "pdfs_descargados";
+
+        List<ConstitucionEmpresa> constituciones = bormeOrchestratorService.procesarBormeCompleto(fecha, directorioDestino);
+
+        System.out.println("Constituciones encontradas: " + constituciones.size());
+        for (ConstitucionEmpresa constitucion : constituciones) {
+            System.out.println(" - " + constitucion);
         }
     }
 }

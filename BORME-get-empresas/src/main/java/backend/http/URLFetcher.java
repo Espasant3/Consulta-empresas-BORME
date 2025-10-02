@@ -6,6 +6,9 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 
 @Component
 public class URLFetcher {
@@ -45,6 +48,11 @@ public class URLFetcher {
         return realizarConsulta(this.url);
     }
 
+    /**
+     *
+     * @param urlEspecifica
+     * @return
+     */
     public boolean realizarConsulta(String urlEspecifica) {
         if (urlEspecifica == null || urlEspecifica.trim().isEmpty()) {
             this.mensajeError = generarMensajeError(NETWORK_ERROR, "URL no puede ser nula o vacía");
@@ -83,6 +91,63 @@ public class URLFetcher {
             return false;
         }
     }
+
+    /**
+     * Descargar un archivo binario (PDF, etc.) y lo guarda en disco
+     * @param url
+     * @param filePath
+     * @return
+     */
+    public boolean downloadBinaryFile(String url, String filePath) {
+        try {
+            HttpRequest solicitud = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .GET()
+                    .build();
+
+            HttpResponse<byte[]> respuesta = HttpClient.newHttpClient().send(
+                    solicitud,
+                    HttpResponse.BodyHandlers.ofByteArray()
+            );
+
+            if (respuesta.statusCode() == HTTP_OK) {
+                Files.write(Path.of(filePath), respuesta.body(), StandardOpenOption.CREATE);
+                return true;
+            }
+            return false;
+
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Error descargando archivo: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Obtiene contenido binario en memoria (para procesamiento directo)
+     *
+     * @param url
+     */
+    public byte[] fetchBinaryContent(String url) {
+        try {
+            HttpRequest solicitud = HttpRequest.newBuilder()
+                    .uri(URI.create(url))
+                    .GET()
+                    .build();
+
+            HttpResponse<byte[]> respuesta = HttpClient.newHttpClient().send(
+                    solicitud,
+                    HttpResponse.BodyHandlers.ofByteArray()
+            );
+
+            return respuesta.statusCode() == HTTP_OK ? respuesta.body() : null;
+
+        } catch (IOException | InterruptedException e) {
+            System.err.println("Error obteniendo contenido binario: " + e.getMessage());
+            return null;
+        }
+    }
+
+
 
     // Construccion generica de mensajes de error en función del código recibido
     private String generarMensajeError(int codigo, String mensajeAdicional) {

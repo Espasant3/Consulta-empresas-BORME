@@ -16,6 +16,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     implementation 'org.springframework.boot:spring-boot-starter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // Procesamiento de PDFs
+    implementation 'org.apache.pdfbox:pdfbox:2.0.29'
+
+    // Manipulación de archivos (por si acaso)
+    implementation 'commons-io:commons-io:2.11.0'
 }
 
 tasks.named('test') {
