@@ -33,7 +33,8 @@ public class BormeService {
                 return false;
             }
 
-            LocalDate fechaMinima = LocalDate.of(1990, 1, 1);
+            // Fecha mínima aceptada por la pagina, comprobada manualmente
+            LocalDate fechaMinima = LocalDate.of(2001, 1, 2);
             return !fechaDate.isBefore(fechaMinima);
 
         } catch (Exception e) {

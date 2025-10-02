@@ -1,4 +1,4 @@
-package backend.application;
+package backend;
 
 import backend.application.runner.BormeTestRunner;
 import org.springframework.boot.SpringApplication;

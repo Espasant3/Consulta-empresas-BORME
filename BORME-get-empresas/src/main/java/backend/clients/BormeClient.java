@@ -9,15 +9,21 @@ import java.time.format.DateTimeFormatter;
 
 @Component
 public class BormeClient {
+
+    // URL del BORME preparada para ser accedida
     private static final String BASE_URL = "https://www.boe.es/borme/dias/";
+
+    // Formato de fecha que, junto a la URL del BORME, permitirá acceder a la pagina web del día indicado
     private static final DateTimeFormatter URL_FORMATTER = DateTimeFormatter.ofPattern("yyyy/MM/dd");
+
+    // Formato de fecha que va a aceptar la aplicación  según la especificacion
     private static final DateTimeFormatter INPUT_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
-    private final URLFetcher URLFetcher;
+    private final URLFetcher urlFetcher;
 
     @Autowired
-    public BormeClient(URLFetcher URLFetcher) {
-        this.URLFetcher = URLFetcher;
+    public BormeClient(URLFetcher urlFetcher) {
+        this.urlFetcher = urlFetcher;
     }
 
     public BormeResponse consultarPorFecha(String fecha) {
@@ -25,15 +31,15 @@ public class BormeClient {
             LocalDate fechaDate = LocalDate.parse(fecha, INPUT_FORMATTER);
             String url = construirUrl(fechaDate);
 
-            boolean exito = URLFetcher.realizarConsulta(url);
+            boolean exito = urlFetcher.realizarConsulta(url);
 
             return new BormeResponse(
                     exito,
                     fecha,
                     url,
-                    URLFetcher.getContenido(),
-                    URLFetcher.getCodigoEstado(),
-                    URLFetcher.getMensajeError()
+                    urlFetcher.getContenido(),
+                    urlFetcher.getCodigoEstado(),
+                    urlFetcher.getMensajeError()
             );
 
         } catch (Exception e) {

@@ -23,7 +23,7 @@ public class URLFetcher {
     public static final int HTTP_INTERNAL_ERROR = 500;
     public static final int HTTP_SERVICE_UNAVAILABLE = 503;
 
-    // Constante para error de red/conexión (no es HTTP)
+    // Constante para error de red/conexión
     public static final int NETWORK_ERROR = -1;
 
     private String url;
@@ -84,7 +84,7 @@ public class URLFetcher {
         }
     }
 
-    // Método genérico para construir mensajes de error
+    // Construccion generica de mensajes de error en función del código recibido
     private String generarMensajeError(int codigo, String mensajeAdicional) {
         String mensajeBase;
 
@@ -142,7 +142,7 @@ public class URLFetcher {
     public int getCodigoEstado() { return codigoEstado; }
     public String getMensajeError() { return mensajeError; }
 
-    // Métodos de utilidad PRIVADOS para uso interno
+
     private boolean esExitoso() {
         return codigoEstado >= 200 && codigoEstado < 300;
     }
@@ -155,13 +155,12 @@ public class URLFetcher {
         return codigoEstado >= 500 && codigoEstado < 600;
     }
 
-    // Método público simplificado para verificar éxito
     public boolean fueExitosa() {
         return codigoEstado == HTTP_OK;
     }
 
-    // Método público para obtener descripción del estado
     public String getDescripcionEstado() {
         return generarMensajeError(codigoEstado, null);
     }
+
 }
