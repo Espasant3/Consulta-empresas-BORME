@@ -103,13 +103,28 @@ public class BormeTestRunner implements CommandLineRunner {
     }
 
     private void testDescargaPdfs() {
-        System.out.println("\n--- Prueba 5: Descarga de PDFs ---");
+        System.out.println("\n--- Prueba 5: Descarga y Procesamiento de PDFs ---");
         String fecha = "2024-09-10";
-        List<ConstitucionEmpresa> constituciones = bormeOrchestratorService.procesarBormeCompleto(fecha);
 
-        System.out.println("Constituciones encontradas: " + constituciones.size());
-        for (ConstitucionEmpresa constitucion : constituciones) {
-            System.out.println(" - " + constitucion);
+        try {
+            List<ConstitucionEmpresa> constituciones = bormeOrchestratorService.procesarBormeCompleto(fecha);
+
+            System.out.println("=== RESULTADOS ===");
+            System.out.println("Total constituciones encontradas: " + constituciones.size());
+
+            for (ConstitucionEmpresa constitucion : constituciones) {
+                System.out.println("\n--- Constitución ---");
+                System.out.println("Asiento: " + constitucion.getNumeroAsiento());
+                System.out.println("Empresa: " + constitucion.getNombreEmpresa());
+                System.out.println("Fecha de constitución: " + constitucion.getFechaConstitucion());
+                System.out.println("Objeto Social: " + constitucion.getObjetoSocial());
+                System.out.println("Domicilio: " + constitucion.getDomicilio());
+                System.out.println("Capital: " + constitucion.getCapital());
+            }
+
+        } catch (Exception e) {
+            System.err.println("Error en prueba de PDFs: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

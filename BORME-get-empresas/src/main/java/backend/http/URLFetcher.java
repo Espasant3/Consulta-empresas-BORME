@@ -148,8 +148,11 @@ public class URLFetcher {
     }
 
 
-
-    // Construccion generica de mensajes de error en función del código recibido
+    /**
+     * Construccion generica de mensajes de error en función del código recibido
+     * @param codigo
+     * @param mensajeAdicional
+     * */
     private String generarMensajeError(int codigo, String mensajeAdicional) {
         String mensajeBase;
 
