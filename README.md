@@ -21,4 +21,3 @@ Este repositorio contiene los programas desarrollados para, dado un día concret
 
 ## Uso
 
->>>>>>> 0b64ed6 (First commit)
