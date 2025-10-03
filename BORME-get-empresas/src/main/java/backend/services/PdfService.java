@@ -27,56 +27,95 @@ public class PdfService {
     public List<String> extraerUrlsPdfDelBorme(String fecha) {
         List<String> urlsPdf = new ArrayList<>();
 
-        // Consultar el BORME para la fecha
         var respuesta = bormeService.consultarBorme(fecha);
         if (!respuesta.isExito()) {
-            return urlsPdf;
+            return urlsPdf; // lista vacía
         }
 
-        // Buscar patrones de URLs de PDF en el HTML
         String html = respuesta.getContenidoHtml();
-        Pattern pattern = Pattern.compile("href=\"([^\"]*\\.pdf)\"", Pattern.CASE_INSENSITIVE);
-        Matcher matcher = pattern.matcher(html);
 
-        while (matcher.find()) {
-            String urlPdf = matcher.group(1);
-            // Convertir URL relativa a absoluta si es necesario
+        // Capturar cualquier texto que hay ENTRE el título de SECCIÓN PRIMERA y el título de SECCIÓN SEGUNDA (o hasta el final si no hay segunda)
+        Pattern seccionPrimeraPattern = Pattern.compile(
+                "<h[1-6][^>]*>\\s*SECCI[ÓO]N\\s+PRIMERA.*?</h[1-6]>(.*?)(?=<h[1-6][^>]*>\\s*SECCI[ÓO]N\\s+SEGUNDA|\\z)",
+                Pattern.DOTALL | Pattern.CASE_INSENSITIVE
+        );
+        Matcher seccionPrimeraMatcher = seccionPrimeraPattern.matcher(html);
+
+        if (!seccionPrimeraMatcher.find()) {
+            return urlsPdf; // Como no hay sección primera se devuelve una lista vacía
+        }
+
+        String bloqueSeccionPrimera = seccionPrimeraMatcher.group(1);
+
+        // Asegurar que estamos desde "Actos inscritos" hacia adelante dentro de la sección primera
+        Pattern actosInscritosPattern = Pattern.compile(
+                "<h[1-6][^>]*>\\s*Actos\\s+inscritos\\s*</h[1-6]>(.*)",
+                Pattern.DOTALL | Pattern.CASE_INSENSITIVE
+        );
+        Matcher actosMatcher = actosInscritosPattern.matcher(bloqueSeccionPrimera);
+
+        String contenidoParaBuscar;
+        if (actosMatcher.find()) {
+            contenidoParaBuscar = actosMatcher.group(1);
+        } else {
+            // Si no aparece el h de "Actos inscritos", buscamos PDFs en toda la sección primera
+            contenidoParaBuscar = bloqueSeccionPrimera;
+        }
+
+        // Extraer TODOS los PDFs dentro del contenido seleccionado
+        Pattern pdfPattern = Pattern.compile("href\\s*=\\s*\"([^\"]*\\.pdf)\"", Pattern.CASE_INSENSITIVE);
+        Matcher pdfMatcher = pdfPattern.matcher(contenidoParaBuscar);
+
+        while (pdfMatcher.find()) {
+            String urlPdf = pdfMatcher.group(1);
             if (urlPdf.startsWith("/")) {
                 urlPdf = "https://www.boe.es" + urlPdf;
             }
             urlsPdf.add(urlPdf);
         }
 
-        return urlsPdf;
+        return urlsPdf; // Si finalmente la sección existe pero está vacía, la lista será vacía al no haber PDFs
     }
+
 
     /**
      * Descarga todos los PDFs de una fecha específica
      */
-    public List<String> descargarPdfsDelBorme(String fecha, String directorioDestino) {
+    public List<String> descargarPdfsDelBorme(String fecha) {
         List<String> archivosDescargados = new ArrayList<>();
         List<String> urlsPdf = extraerUrlsPdfDelBorme(fecha);
 
-        // Crear directorio si no existe
+        // Directorio base fijo
+        String directorioBase = "pdfs_descargados";
+
+        // Subdirectorio por fecha
+        Path directorioFecha = Paths.get(directorioBase, fecha);
+
+        // Crear directorio solo si no existe
         try {
-            Files.createDirectories(Paths.get(directorioDestino));
+            if (!Files.exists(directorioFecha)) {
+                Files.createDirectories(directorioFecha);
+                System.out.println("Directorio creado: " + directorioFecha);
+            }
         } catch (IOException e) {
             System.err.println("Error creando directorio: " + e.getMessage());
             return archivosDescargados;
         }
 
+        // Descargar cada PDF en el directorio correspondiente
         for (String urlPdf : urlsPdf) {
             String nombreArchivo = extraerNombreArchivoDeUrl(urlPdf);
-            String rutaCompleta = Paths.get(directorioDestino, nombreArchivo).toString();
+            Path rutaCompleta = directorioFecha.resolve(nombreArchivo);
 
-            if (urlFetcher.downloadBinaryFile(urlPdf, rutaCompleta)) {
-                archivosDescargados.add(rutaCompleta);
+            if (urlFetcher.downloadBinaryFile(urlPdf, rutaCompleta.toString())) {
+                archivosDescargados.add(rutaCompleta.toString());
                 System.out.println("PDF descargado: " + rutaCompleta);
             }
         }
 
         return archivosDescargados;
     }
+
 
     private String extraerNombreArchivoDeUrl(String url) {
         return url.substring(url.lastIndexOf("/") + 1);

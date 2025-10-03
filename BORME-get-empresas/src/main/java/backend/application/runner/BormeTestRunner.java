@@ -105,9 +105,7 @@ public class BormeTestRunner implements CommandLineRunner {
     private void testDescargaPdfs() {
         System.out.println("\n--- Prueba 5: Descarga de PDFs ---");
         String fecha = "2024-09-10";
-        String directorioDestino = "pdfs_descargados";
-
-        List<ConstitucionEmpresa> constituciones = bormeOrchestratorService.procesarBormeCompleto(fecha, directorioDestino);
+        List<ConstitucionEmpresa> constituciones = bormeOrchestratorService.procesarBormeCompleto(fecha);
 
         System.out.println("Constituciones encontradas: " + constituciones.size());
         for (ConstitucionEmpresa constitucion : constituciones) {
