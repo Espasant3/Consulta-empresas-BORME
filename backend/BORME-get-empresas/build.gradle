@@ -22,6 +22,16 @@ dependencies {
 
     // Manipulación de archivos (por si acaso)
     implementation 'commons-io:commons-io:2.11.0'
+
+    // Starter de Spring Data JPA (incluye Hibernate y JdbcTemplate)
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+
+    // Driver de PostgreSQL
+    runtimeOnly 'org.postgresql:postgresql'
+
+    // Starter básico de Spring Boot
+    implementation 'org.springframework.boot:spring-boot-starter'
+
 }
 
 tasks.named('test') {
@@ -30,7 +40,7 @@ tasks.named('test') {
 
 // Para crear un JAR ejecutable
 bootJar {
-    mainClass = 'backend.BormeApplication'
+    mainClass = 'borme.BormeApplication'
 }
 
 // Configuración del compilador Java

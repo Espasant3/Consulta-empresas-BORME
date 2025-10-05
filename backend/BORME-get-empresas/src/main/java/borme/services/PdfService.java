@@ -1,6 +1,6 @@
-package backend.services;
+package borme.services;
 
-import backend.http.URLFetcher;
+import borme.http.URLFetcher;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

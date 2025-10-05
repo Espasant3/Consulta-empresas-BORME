@@ -1,6 +1,6 @@
-package backend.parsers;
+package borme.parsers;
 
-import backend.domain.ConstitucionEmpresa;
+import borme.domain.ConstitucionEmpresa;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.text.PDFTextStripper;
 import org.springframework.stereotype.Component;
@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.time.LocalDate;
 
 @Component
 public class BormePdfParser {
@@ -52,7 +53,7 @@ public class BormePdfParser {
             if (bloque.contains("Constitución.")) {
                 try {
                     ConstitucionEmpresa constitucion = parsearBloqueConstitucion(bloque);
-                    if (constitucion != null) {
+                    if (constitucion != null && constitucion.getNumeroAsiento() != null) {
                         constituciones.add(constitucion);
                         System.out.println("Encontrada constitución: " + constitucion.getNombreEmpresa());
                     }
@@ -83,14 +84,24 @@ public class BormePdfParser {
             constitucion.setNombreEmpresa(nombreMatcher.group(2).trim().replaceAll("\\.$", ""));
         }
 
-        // Extraer fecha de constitución
+        // Extraer fecha de constitución - CONVERSIÓN A LocalDate
         Pattern fechaPattern = Pattern.compile(
                 "Comienzo\\s+de\\s+operaciones\\s*[:：；]\\s*(\\d{1,2}[./]\\d{1,2}[./]\\d{2,4})",
                 Pattern.CASE_INSENSITIVE);
         Matcher fechaMatcher = fechaPattern.matcher(bloque);
         if (fechaMatcher.find()) {
-            constitucion.setFechaConstitucion(normalizarFecha(fechaMatcher.group(1).trim()));
-            //constitucion.setFechaConstitucion(fechaMatcher.group(1).trim());
+            LocalDate fecha = normalizarFecha(fechaMatcher.group(1).trim());
+            if (fecha != null) {
+                constitucion.setFechaConstitucion(fecha);
+            } else {
+                // Si no podemos parsear la fecha, no podemos crear la constitución
+                System.err.println("No se pudo parsear fecha para asiento: " + constitucion.getNumeroAsiento());
+                return null;
+            }
+        } else {
+            // Si no encontramos fecha en el texto, no podemos crear la constitución
+            System.err.println("No se encontró fecha de constitución para asiento: " + constitucion.getNumeroAsiento());
+            return null;
         }
 
         // Extraer objeto social (desde "Objeto social:" hasta "Domicilio:")
@@ -122,15 +133,53 @@ public class BormePdfParser {
      * @param texto texto del PDF que queremos limpiar
      *
      */
-
     private String preprocesarTextoBORME(String texto) {
         if (texto == null) return "";
 
-        // Identificar y eliminar elementos no deseados de las cabeceras
-        texto = texto.replaceAll("(?s)(BOLETÍN\\s*OFICIAL\\s*DEL\\s*REGISTRO\\s*MERCANTIL\\s*Núm\\.\\s*\\d+\\s+(?:Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\\s+\\d+\\s+de\\s+(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s+de\\s+\\d{4}\\s+Pág\\.\\s+\\d+|Núm\\.\\s*\\d+\\s+(?:Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\\s*\\d+\\s*de\\s*(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s*de\\s*\\d{4}\\s*Pág\\.\\s*\\d+)", "");
+        // Normalizar todos los espacios en blanco (espacios, tabs, saltos de línea) en un solo espacio
+        texto = texto.replaceAll("\\s+", " ").trim();
 
-        // Eliminar elementos web (verticales) con máxima flexibilidad de espacios
-        texto = texto.replaceAll("(?s)(cve\\s*:\\s*B\\s*O\\s*R\\s*M\\s*E\\s*-\\s*A\\s*-\\s*\\d{4}\\s*-\\s*\\d{3}\\s*-\\s*\\d{2}\\s*Ver\\s*if*ic\\s*abl\\s*e\\s*e\\s*n\\s*h\\s*t\\s*t\\s*p\\s*s?\\s*:\\/\\/\\s*w\\s*w\\s*w\\s*\\.\\s*b\\s*o\\s*e\\s*\\.\\s*e\\s*s|https?\\s*:\\/\\/\\s*w\\s*w\\s*w\\s*\\.\\s*b\\s*o\\s*e\\s*\\.\\s*e\\s*s\\s+BOLETÍN\\s+OFICIAL\\s+DEL\\s+REGISTRO\\s+MERCANTIL\\s+D\\.\\s*L\\.\\s*:\\s*M-\\d{4}/\\d{4}-\\s*ISSN\\s*:\\s*\\d{4}-\\d{4})", "");
+        // Eliminar cabeceras completas del Boletín Oficial
+        texto = texto.replaceAll(
+                "(?i)BOLETÍN\\s+OFICIAL\\s+DEL\\s+REGISTRO\\s+MERCANTIL\\s+Núm\\.\\s*\\d+\\s+" +
+                        "(?:Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\\s+\\d+\\s+de\\s+" +
+                        "(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s+de\\s+\\d{4}\\s+" +
+                        "Pág\\.\\s*\\d+",
+                ""
+        );
+
+        // Eliminar versiones abreviadas de la cabecera (solo fecha y número)
+        texto = texto.replaceAll(
+                "(?i)Núm\\.\\s*\\d+\\s+" +
+                        "(?:Lunes|Martes|Miércoles|Jueves|Viernes|Sábado|Domingo)\\s+\\d+\\s+de\\s+" +
+                        "(?:enero|febrero|marzo|abril|mayo|junio|julio|agosto|septiembre|octubre|noviembre|diciembre)\\s+de\\s+\\d{4}\\s+Pág\\.\\s*\\d+",
+                ""
+        );
+
+        // Eliminar URLs del BOE (ahora innecesario usar \s* entre letras, porque ya normalizamos)
+        texto = texto.replaceAll("(?i)https?://www\\.boe\\.es", "");
+
+        // Eliminar bloques con metadatos (DL, ISSN, etc.)
+        texto = texto.replaceAll(
+                "(?i)BOLETÍN\\s+OFICIAL\\s+DEL\\s+REGISTRO\\s+MERCANTIL\\s+" +
+                        "D\\.\\s*L\\.\\s*:\\s*M-\\d{4}/\\d{4}-\\s*ISSN\\s*:\\s*\\d{4}-\\d{4}",
+                ""
+        );
+
+        // Eliminar referencias CVE completas (incluyendo "Verificable en...")
+        texto = texto.replaceAll(
+                "(?i)cve\\s*:\\s*BORME-A-\\d{4}-\\d{3}-\\d{2}\\s+Verificable\\s+en\\s+https?://www\\.boe\\.es",
+                ""
+        );
+
+        // Eliminar CVE si aparece sola (sin URL)
+        texto = texto.replaceAll("(?i)cve\\s*:\\s*BORME-A-\\d{4}-\\d{3}-\\d{2}", "");
+
+        // Limpieza del bloque final del PDF
+        texto = texto.replaceAll(
+                "(?i)https?://www\\.boe\\.es\\s+BOLETÍN\\s+OFICIAL\\s+DEL\\s+REGISTRO\\s+MERCANTIL\\s+D\\.\\s*L\\.\\s*:\\s*M-\\d{4}/\\d{4}\\s*-\\s*ISSN\\s*:\\s*\\d{4}-\\d{4}",
+                ""
+        );
 
         // Normalizar saltos de línea preservando estructura
         texto = texto.replaceAll("\\r\\n", "\n");
@@ -149,36 +198,49 @@ public class BormePdfParser {
         return texto.trim();
     }
 
+
     /**
      * Normaliza la fecha de constitución al formato yyyy-MM-dd
      * @param fechaRaw fecha en formato empleado por el PDF
      */
-    private String normalizarFecha(String fechaRaw) {
+    private LocalDate normalizarFecha(String fechaRaw) {
+        if (fechaRaw == null || fechaRaw.trim().isEmpty()) {
+            return null;
+        }
+
         // Limpiar la fecha de espacios y caracteres extraños
         String fecha = fechaRaw.trim().replaceAll("[^\\d./-]", "");
 
-        // Intentar detectar el formato
-        if (fecha.matches("\\d{1,2}[./-]\\d{1,2}[./-]\\d{2}")) {
-            // Formato dd.mm.aa
-            String[] partes = fecha.split("[./-]");
-            int dia = Integer.parseInt(partes[0]);
-            int mes = Integer.parseInt(partes[1]);
-            int anio = Integer.parseInt(partes[2]);
+        try {
+            // Intentar detectar el formato
+            if (fecha.matches("\\d{1,2}[./-]\\d{1,2}[./-]\\d{2}")) {
+                // Formato dd.mm.aa
+                String[] partes = fecha.split("[./-]");
+                int dia = Integer.parseInt(partes[0]);
+                int mes = Integer.parseInt(partes[1]);
+                int anio = Integer.parseInt(partes[2]);
 
-            // Asumir que años < 50 son del siglo XXI, > 50 del siglo XX
-            anio += (anio < 50) ? 2000 : (anio < 100) ? 1900 : 0;
+                // Asumir que años < 50 son del siglo XXI, > 50 del siglo XX
+                anio += (anio < 50) ? 2000 : (anio < 100) ? 1900 : 0;
 
-            return String.format("%04d-%02d-%02d", anio, mes, dia);
-        } else if (fecha.matches("\\d{1,2}[./-]\\d{1,2}[./-]\\d{4}")) {
-            // Formato dd.mm.aaaa
-            String[] partes = fecha.split("[./-]");
-            return String.format("%04d-%02d-%02d",
-                    Integer.parseInt(partes[2]),
-                    Integer.parseInt(partes[1]),
-                    Integer.parseInt(partes[0]));
+                return LocalDate.of(anio, mes, dia);
+            } else if (fecha.matches("\\d{1,2}[./-]\\d{1,2}[./-]\\d{4}")) {
+                // Formato dd.mm.aaaa
+                String[] partes = fecha.split("[./-]");
+                int dia = Integer.parseInt(partes[0]);
+                int mes = Integer.parseInt(partes[1]);
+                int anio = Integer.parseInt(partes[2]);
+                return LocalDate.of(anio, mes, dia);
+            }
+
+            // Si no coincide con ningún formato, devolver null
+            return null;
+
+        } catch (Exception e) {
+            System.err.println("Error parseando fecha: " + fechaRaw + " - " + e.getMessage());
+            return null;
         }
-
-        // Si no se puede normalizar, devolver como está
-        return fecha;
     }
+
+
 }

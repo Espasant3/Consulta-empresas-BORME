@@ -16,8 +16,54 @@ Este repositorio contiene los programas desarrollados para, dado un día concret
 
 ### Requisitos Previos
 
+- **Java 11 o superior**  
+  (probado con OpenJDK 17.0.16)
+- **Spring Boot 2.7.18**
+- **Gradle 7.x o superior**  
+  (el proyecto incluye `gradlew`, por lo que no es necesario tener Gradle instalado globalmente)
+- **Docker 20.10**  
+  (probado con Docker 27.5.1)
+- **Docker Compose v2**  
+  (incluido como plugin en Docker 27.5.1, utilizado mediante `docker compose`)
 
+
+
+
+
+### Docker
 
 
 ## Uso
+
+
+### Comandos útiles
+
+
+# Construir y ejecutar localmente
+./gradlew bootRun
+
+# Construir JAR
+./gradlew bootJar
+
+# Ejecutar tests
+./gradlew test
+
+# Construir con Docker
+docker build -t borme-scraper .
+
+# Ejecutar con Docker
+docker run -p 8080:8080 -v $(pwd)/pdfs_descargados:/app/pdfs_descargados borme-scraper
+
+# Ejecutar todo con Docker Compose
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f borme-scraper
+
+# Parar servicios
+docker-compose down
+
+# Limpiar completamente
+docker-compose down -v
+
 

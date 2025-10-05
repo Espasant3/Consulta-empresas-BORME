@@ -1,7 +1,7 @@
-package backend.controllers;
+package borme.controllers;
 
-import backend.services.BormeService;
-import backend.domain.BormeResponse;
+import borme.services.BormeService;
+import borme.domain.BormeResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;

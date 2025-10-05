@@ -1,7 +1,7 @@
-package backend.services;
+package borme.services;
 
-import backend.clients.BormeClient;
-import backend.domain.BormeResponse;
+import borme.clients.BormeClient;
+import borme.domain.BormeResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.time.LocalDate;

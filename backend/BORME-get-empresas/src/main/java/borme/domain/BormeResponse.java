@@ -1,4 +1,4 @@
-package backend.domain;
+package borme.domain;
 
 public class BormeResponse {
     private final boolean exito;

@@ -1,4 +1,4 @@
-package backend.http;
+package borme.http;
 
 import org.springframework.stereotype.Component;
 import java.net.URI;

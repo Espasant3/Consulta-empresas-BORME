@@ -1,7 +1,7 @@
-package backend.clients;
+package borme.clients;
 
-import backend.http.URLFetcher;
-import backend.domain.BormeResponse;
+import borme.http.URLFetcher;
+import borme.domain.BormeResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import java.time.LocalDate;

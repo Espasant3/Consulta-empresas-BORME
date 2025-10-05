@@ -1,12 +1,23 @@
-package backend.domain;
+package borme.domain;
 
+import javax.persistence.*;
+import java.time.LocalDate;
+
+@Entity
+@IdClass(ConstitucionEmpresaId.class)
+@Table(name = "borme_constitucion_empresa")
 public class ConstitucionEmpresa {
+    @Id
     private String numeroAsiento;
+
+    @Id
+    @Column(name = "fecha_constitucion")
+    private LocalDate fechaConstitucion;
+
     private String nombreEmpresa;
     private String objetoSocial;
     private String domicilio;
     private String capital;
-    private String fechaConstitucion;
 
     // Getters y Setters
     public String getNumeroAsiento() { return numeroAsiento; }
@@ -24,8 +35,8 @@ public class ConstitucionEmpresa {
     public String getCapital() { return capital; }
     public void setCapital(String capital) { this.capital = capital; }
 
-    public String getFechaConstitucion() { return fechaConstitucion; }
-    public void setFechaConstitucion(String fechaConstitucion) { this.fechaConstitucion = fechaConstitucion; }
+    public LocalDate getFechaConstitucion() { return fechaConstitucion; }
+    public void setFechaConstitucion(LocalDate fechaConstitucion) { this.fechaConstitucion = fechaConstitucion; }
 
     @Override
     public String toString() {
