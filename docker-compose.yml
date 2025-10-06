@@ -1,0 +1,52 @@
+services:
+  database:
+    image: postgres:13
+    container_name: borme-database
+    environment:
+      - POSTGRES_DB=borme
+      - POSTGRES_USER=borme_user
+      - POSTGRES_PASSWORD=borme_password
+    volumes:
+      - db_data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U borme_user -d borme || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    networks:
+      - borme-network
+    restart: unless-stopped
+
+  backend:
+    build:
+      context: ./backend/BORME-get-empresas
+      dockerfile: Dockerfile
+    container_name: borme-backend
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://database:5432/borme
+      - SPRING_DATASOURCE_USERNAME=borme_user
+      - SPRING_DATASOURCE_PASSWORD=borme_password
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - APP_STORAGE_PDF_PATH=/app/pdfs_descargados
+      - SPRING_PROFILES_ACTIVE=docker
+    volumes:
+      - pdf_storage:/app/pdfs_descargados
+    depends_on:
+      database:
+        condition: service_healthy
+    networks:
+      - borme-network
+    restart: unless-stopped
+
+volumes:
+  pdf_storage:
+  db_data:
+
+networks:
+  borme-network:
+    driver: bridge
+
