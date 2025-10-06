@@ -9,7 +9,9 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class BormeOrchestratorService {
@@ -24,25 +26,21 @@ public class BormeOrchestratorService {
     private ConstitucionEmpresaService constitucionEmpresaService;
 
     /**
-     * Proceso orquestado completo:
-     * 1. Verifica si ya hay datos en BD para la fecha
-     * 2. Si hay, los devuelve desde BD
-     * 3. Si no, procesa PDFs, extrae constituciones y las guarda en BD
-     *
-     * @return Lista de constituciones (desde BD o recién procesadas)
+     * Tu método existente - perfecto como está
+     * Este ya hace exactamente lo que necesitas: consulta BD y si no hay datos, los procesa
      */
     public List<ConstitucionEmpresa> procesarBormeCompleto(String fecha) {
         System.out.println("=== ORQUESTANDO PROCESAMIENTO BORME PARA: " + fecha + " ===");
 
         LocalDate fechaLocalDate = LocalDate.parse(fecha);
 
-        // 1. Verificar si ya existen datos en BD para esta fecha
+        // Verificar si ya existen datos en BD para esta fecha
         if (constitucionEmpresaService.existenConstitucionesParaFecha(fechaLocalDate)) {
             System.out.println("✅ Ya existen constituciones en BD para " + fecha + ". Recuperando desde BD...");
             return constitucionEmpresaService.obtenerConstitucionesPorFecha(fechaLocalDate);
         }
 
-        // 2. No hay datos en BD, procesar desde PDFs
+        // No hay datos en BD, procesar desde PDFs
         System.out.println("📋 No hay constituciones en BD para " + fecha + ". Procesando desde PDFs...");
 
         List<ConstitucionEmpresa> constitucionesExtraidas = new ArrayList<>();
@@ -63,7 +61,7 @@ public class BormeOrchestratorService {
                 }
             }
 
-            // 3. Guardar en BD las constituciones extraídas y devolverlas
+            // Guardar en BD las constituciones extraídas y devolverlas
             System.out.println("💾 Guardando " + constitucionesExtraidas.size() + " constituciones en BD...");
             return constitucionEmpresaService.guardarConstituciones(constitucionesExtraidas);
 
@@ -73,9 +71,36 @@ public class BormeOrchestratorService {
         }
     }
 
-    public String extraerNombrePDFDeUrl(String url) {
-        return Paths.get(URI.create(url).getPath()).getFileName().toString();
+    /**
+     * Solo para la API
+     * Devuelve metadatos del procesamiento sin lógica compleja
+     */
+    public Map<String, Object> obtenerConstitucionesParaAPI(String fecha) {
+        Map<String, Object> resultado = new HashMap<>();
+
+        try {
+
+            List<ConstitucionEmpresa> constituciones = procesarBormeCompleto(fecha);
+
+            resultado.put("exito", true);
+            resultado.put("fecha", fecha);
+            resultado.put("totalConstituciones", constituciones.size());
+            resultado.put("constituciones", constituciones);
+            resultado.put("mensaje", "Datos obtenidos correctamente");
+
+        } catch (Exception e) {
+            System.err.println("Error obteniendo constituciones: " + e.getMessage());
+            resultado.put("exito", false);
+            resultado.put("fecha", fecha);
+            resultado.put("error", e.getMessage());
+            resultado.put("totalConstituciones", 0);
+        }
+
+        return resultado;
     }
 
 
+    public String extraerNombrePDFDeUrl(String url) {
+        return Paths.get(URI.create(url).getPath()).getFileName().toString();
+    }
 }

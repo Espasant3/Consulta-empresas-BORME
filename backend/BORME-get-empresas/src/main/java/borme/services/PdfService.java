@@ -25,7 +25,6 @@ public class PdfService {
     @Value("${app.storage.pdf.path:pdfs_descargados}")
     private String DIRECTORIO_BASE;
 
-    // O si prefieres mantener el control directo:
     private Path getDirectorioBase() {
         return Paths.get(DIRECTORIO_BASE);
     }

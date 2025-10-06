@@ -29,6 +29,14 @@ public interface ConstitucionEmpresaRepository extends JpaRepository<Constitucio
     // Búsqueda case-insensitive
     List<ConstitucionEmpresa> findByNombreEmpresaContainingIgnoreCase(String nombre);
 
+    @Query("SELECT MAX(ce.fechaConstitucion) FROM ConstitucionEmpresa ce")
+    LocalDate findMaxFechaConstitucion();
+
+    @Query("SELECT MIN(ce.fechaConstitucion) FROM ConstitucionEmpresa ce")
+    LocalDate findMinFechaConstitucion();
+
+    boolean existsByFechaConstitucion(LocalDate fechaConstitucion);
+
     // Búsqueda exacta por nombre
     List<ConstitucionEmpresa> findByNombreEmpresa(String nombre);
 

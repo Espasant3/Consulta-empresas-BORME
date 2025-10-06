@@ -30,7 +30,6 @@ public class ConstitucionEmpresa {
     @Column(columnDefinition = "TEXT")
     private String capital;
 
-    // Nuevas columnas - solo metadatos
     @Column(name = "fecha_pdf")
     private LocalDate fechaPDF;
 
@@ -62,14 +61,23 @@ public class ConstitucionEmpresa {
     public String getNombreArchivoPDF() { return nombreArchivoPDF; }
     public void setNombreArchivoPDF(String nombreArchivoPDF) { this.nombreArchivoPDF = nombreArchivoPDF; }
 
-    public Path getRutaCompletaPDF(String directorioBase) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
-        String rutaFecha = fechaPDF.format(formatter);
+    /**
+     * Genera la URL del PDF a través del endpoint del API
+     * Esto es consistente sin importar el entorno
+     */
+    public String getUrlPDF() {
+        if (nombreArchivoPDF != null && fechaPDF != null) {
+            return "/api/pdfs/" + fechaPDF + "/" + nombreArchivoPDF;
+        }
+        return null;
+    }
 
-        return Paths.get(directorioBase)
-                .resolve(rutaFecha)
-                .resolve(nombreArchivoPDF)
-                .normalize();
+    /**
+     * URL completa si se necesita absoluta
+     */
+    public String getUrlPDF(String baseUrl) {
+        String relativeUrl = getUrlPDF();
+        return relativeUrl != null ? baseUrl + relativeUrl : null;
     }
 
     @Override
