@@ -133,24 +133,39 @@ public class BormeTestRunner implements CommandLineRunner {
     }
 
     private void testDescargaPdfs() {
-        System.out.println("\n--- Prueba 5: Descarga y Procesamiento de PDFs ---");
+        System.out.println("\n--- Prueba 5: Procesamiento BORME Completo (Orquestado) ---");
         String fecha = "2024-09-10";
 
         try {
+            // El orchestrator devuelve DIRECTAMENTE la lista
             List<ConstitucionEmpresa> constituciones = bormeOrchestratorService.procesarBormeCompleto(fecha);
 
-            System.out.println("=== RESULTADOS ===");
-            System.out.println("Total constituciones encontradas: " + constituciones.size());
+            System.out.println("=== RESULTADOS DEL PROCESAMIENTO ===");
+            System.out.println("Total constituciones obtenidas: " + constituciones.size());
 
-            for (ConstitucionEmpresa constitucion : constituciones) {
-                System.out.println("\n--- Constitución ---");
+            // Mostrar algunas constituciones
+            System.out.println("\n=== MUESTRA DE CONSTITUCIONES ===");
+
+            for (int i = 0; i < Math.min(constituciones.size(), 3); i++) {
+                ConstitucionEmpresa constitucion = constituciones.get(i);
+                System.out.println("\n--- Constitución " + (i+1) + " ---");
                 System.out.println("Asiento: " + constitucion.getNumeroAsiento());
                 System.out.println("Empresa: " + constitucion.getNombreEmpresa());
-                System.out.println("Fecha de constitución: " + constitucion.getFechaConstitucion());
-                System.out.println("Objeto Social: " + constitucion.getObjetoSocial());
-                System.out.println("Domicilio: " + constitucion.getDomicilio());
-                System.out.println("Capital: " + constitucion.getCapital());
+                System.out.println("Fecha: " + constitucion.getFechaConstitucion());
+                System.out.println("Objeto Social: " +
+                        (constitucion.getObjetoSocial() != null ?
+                                constitucion.getObjetoSocial().substring(0, Math.min(50, constitucion.getObjetoSocial().length())) + "..." :
+                                "N/A"));
             }
+
+            if (constituciones.size() > 3) {
+                System.out.println("\n... y " + (constituciones.size() - 3) + " más");
+            }
+
+            // Probar que la segunda vez usa la caché de BD
+            System.out.println("\n--- Verificación de caché en BD ---");
+            List<ConstitucionEmpresa> constituciones2 = bormeOrchestratorService.procesarBormeCompleto(fecha);
+            System.out.println("Segunda consulta - Total: " + constituciones2.size());
 
         } catch (Exception e) {
             System.err.println("Error en prueba de PDFs: " + e.getMessage());
@@ -288,7 +303,7 @@ public class BormeTestRunner implements CommandLineRunner {
         try {
             // Usa findByFechaConstitucionContaining (que tienes con @Query)
             List<ConstitucionEmpresa> resultados = constitucionEmpresaRepository
-                    .findByFechaConstitucionContaining(LocalDate.parse("2024-01-15"));
+                    .findByFechaConstitucion(LocalDate.parse("2024-01-15"));
 
             System.out.println("✓ Encontradas " + resultados.size() + " empresas para la fecha:");
             for (ConstitucionEmpresa emp : resultados) {

@@ -1,5 +1,6 @@
 package borme;
 
+import borme.application.runner.BormeIntegrationTest;
 import borme.application.runner.BormeTestRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -13,5 +14,9 @@ public class BormeApplication {
         // Ejecutar prueba automáticamente al iniciar
         BormeTestRunner testRunner = context.getBean(BormeTestRunner.class);
         testRunner.runTests();
+
+        BormeIntegrationTest bormeIntegrationTest = context.getBean(BormeIntegrationTest.class);
+        bormeIntegrationTest.runTests();
+
     }
 }

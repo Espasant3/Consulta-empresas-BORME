@@ -5,6 +5,7 @@ import borme.domain.ConstitucionEmpresa;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,18 +18,70 @@ public class BormeOrchestratorService {
     @Autowired
     private BormePdfParser pdfParser;
 
+    @Autowired
+    private ConstitucionEmpresaService constitucionEmpresaService;
+
     /**
-     * Proceso completo: consulta BORME, descarga PDFs (todos o los que falten) y extrae constituciones
+     * Proceso orquestado completo:
+     * 1. Verifica si ya hay datos en BD para la fecha
+     * 2. Si hay, los devuelve desde BD
+     * 3. Si no, procesa PDFs, extrae constituciones y las guarda en BD
+     *
+     * @return Lista de constituciones (desde BD o recién procesadas)
      */
     public List<ConstitucionEmpresa> procesarBormeCompleto(String fecha) {
-        List<ConstitucionEmpresa> todasConstituciones = new ArrayList<>();
+        System.out.println("=== ORQUESTANDO PROCESAMIENTO BORME PARA: " + fecha + " ===");
 
-        // Pedir a PdfService que me dé los PDFs de esa fecha (PdfService se encarga de extraer URLs, comprobar qué hay en disco y descargar lo que falte)
+        LocalDate fechaLocalDate = LocalDate.parse(fecha);
+
+        // 1. Verificar si ya existen datos en BD para esta fecha
+        if (constitucionEmpresaService.existenConstitucionesParaFecha(fechaLocalDate)) {
+            System.out.println("✅ Ya existen constituciones en BD para " + fecha + ". Recuperando desde BD...");
+            return constitucionEmpresaService.obtenerConstitucionesPorFecha(fechaLocalDate);
+        }
+
+        // 2. No hay datos en BD, procesar desde PDFs
+        System.out.println("📋 No hay constituciones en BD para " + fecha + ". Procesando desde PDFs...");
+
+        List<ConstitucionEmpresa> constitucionesExtraidas = new ArrayList<>();
+
+        try {
+            // Obtener PDFs del BORME
+            List<String> archivosPdf = pdfService.obtenerPdfsDelBorme(fecha);
+            System.out.println("📄 PDFs a procesar: " + archivosPdf.size());
+
+            // Procesar cada PDF
+            for (String archivoPdf : archivosPdf) {
+                System.out.println("🔍 Procesando PDF: " + archivoPdf);
+                String textoPdf = pdfParser.extraerTextoPdf(archivoPdf);
+
+                if (textoPdf != null) {
+                    List<ConstitucionEmpresa> constituciones = pdfParser.parsearConstituciones(textoPdf);
+                    constitucionesExtraidas.addAll(constituciones);
+                }
+            }
+
+            // 3. Guardar en BD las constituciones extraídas y devolverlas
+            System.out.println("💾 Guardando " + constitucionesExtraidas.size() + " constituciones en BD...");
+            return constitucionEmpresaService.guardarConstituciones(constitucionesExtraidas);
+
+        } catch (Exception e) {
+            System.err.println("💥 Error en procesamiento: " + e.getMessage());
+            throw new RuntimeException("Error procesando BORME: " + e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Método para solo extraer constituciones sin guardar en BD (para debugging)
+     */
+    public List<ConstitucionEmpresa> extraerConstitucionesSinGuardar(String fecha) {
+        System.out.println("🔧 Modo debug: Extrayendo constituciones sin guardar en BD");
+
+        List<ConstitucionEmpresa> todasConstituciones = new ArrayList<>();
         List<String> archivosPdf = pdfService.obtenerPdfsDelBorme(fecha);
 
-        // Procesar PDFs con el parser
         for (String archivoPdf : archivosPdf) {
-            System.out.println("Procesando PDF: " + archivoPdf);
+            System.out.println("Procesando PDF (sin guardar): " + archivoPdf);
             String textoPdf = pdfParser.extraerTextoPdf(archivoPdf);
 
             if (textoPdf != null) {
@@ -39,5 +92,12 @@ public class BormeOrchestratorService {
 
         return todasConstituciones;
     }
-}
 
+    /**
+     * Método adicional: solo verificar si una fecha está procesada (sin procesar)
+     */
+    public boolean estaFechaProcesada(String fecha) {
+        return constitucionEmpresaService.existenConstitucionesParaFecha(LocalDate.parse(fecha));
+    }
+
+}

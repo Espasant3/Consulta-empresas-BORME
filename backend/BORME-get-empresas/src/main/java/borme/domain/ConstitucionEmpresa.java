@@ -8,15 +8,23 @@ import java.time.LocalDate;
 @Table(name = "borme_constitucion_empresa")
 public class ConstitucionEmpresa {
     @Id
+    @Column(length = 100)
     private String numeroAsiento;
 
     @Id
     @Column(name = "fecha_constitucion")
     private LocalDate fechaConstitucion;
 
+    @Column(columnDefinition = "TEXT")
     private String nombreEmpresa;
+
+    @Column(columnDefinition = "TEXT")
     private String objetoSocial;
+
+    @Column(columnDefinition = "TEXT")
     private String domicilio;
+
+    @Column(columnDefinition = "TEXT")
     private String capital;
 
     // Getters y Setters

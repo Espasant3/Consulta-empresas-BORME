@@ -16,7 +16,7 @@ public interface ConstitucionEmpresaRepository extends JpaRepository<Constitucio
     List<ConstitucionEmpresa> findByNombreEmpresaContaining(String nombre);
 
     @Query("SELECT c FROM ConstitucionEmpresa c WHERE c.fechaConstitucion = :date")
-    List<ConstitucionEmpresa> findByFechaConstitucionContaining(LocalDate date);
+    List<ConstitucionEmpresa> findByFechaConstitucion(LocalDate date);
 
     @Query("SELECT c FROM ConstitucionEmpresa c WHERE c.capital >= :capitalMinimo")
     List<ConstitucionEmpresa> findByCapitalMinimo(@Param("capitalMinimo") String capitalMinimo);
