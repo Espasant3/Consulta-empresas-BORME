@@ -5,6 +5,8 @@ import borme.domain.ConstitucionEmpresa;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.net.URI;
+import java.nio.file.Paths;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -56,7 +58,7 @@ public class BormeOrchestratorService {
                 String textoPdf = pdfParser.extraerTextoPdf(archivoPdf);
 
                 if (textoPdf != null) {
-                    List<ConstitucionEmpresa> constituciones = pdfParser.parsearConstituciones(textoPdf);
+                    List<ConstitucionEmpresa> constituciones = pdfParser.parsearConstituciones(textoPdf, extraerNombrePDFDeUrl(archivoPdf), fecha);
                     constitucionesExtraidas.addAll(constituciones);
                 }
             }
@@ -71,33 +73,9 @@ public class BormeOrchestratorService {
         }
     }
 
-    /**
-     * Método para solo extraer constituciones sin guardar en BD (para debugging)
-     */
-    public List<ConstitucionEmpresa> extraerConstitucionesSinGuardar(String fecha) {
-        System.out.println("🔧 Modo debug: Extrayendo constituciones sin guardar en BD");
-
-        List<ConstitucionEmpresa> todasConstituciones = new ArrayList<>();
-        List<String> archivosPdf = pdfService.obtenerPdfsDelBorme(fecha);
-
-        for (String archivoPdf : archivosPdf) {
-            System.out.println("Procesando PDF (sin guardar): " + archivoPdf);
-            String textoPdf = pdfParser.extraerTextoPdf(archivoPdf);
-
-            if (textoPdf != null) {
-                List<ConstitucionEmpresa> constituciones = pdfParser.parsearConstituciones(textoPdf);
-                todasConstituciones.addAll(constituciones);
-            }
-        }
-
-        return todasConstituciones;
+    public String extraerNombrePDFDeUrl(String url) {
+        return Paths.get(URI.create(url).getPath()).getFileName().toString();
     }
 
-    /**
-     * Método adicional: solo verificar si una fecha está procesada (sin procesar)
-     */
-    public boolean estaFechaProcesada(String fecha) {
-        return constitucionEmpresaService.existenConstitucionesParaFecha(LocalDate.parse(fecha));
-    }
 
 }

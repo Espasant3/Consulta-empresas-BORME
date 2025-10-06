@@ -1,7 +1,10 @@
 package borme.domain;
 
 import javax.persistence.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 
 @Entity
 @IdClass(ConstitucionEmpresaId.class)
@@ -27,7 +30,14 @@ public class ConstitucionEmpresa {
     @Column(columnDefinition = "TEXT")
     private String capital;
 
-    // Getters y Setters
+    // Nuevas columnas - solo metadatos
+    @Column(name = "fecha_pdf")
+    private LocalDate fechaPDF;
+
+    @Column(name = "nombre_archivo_pdf")
+    private String nombreArchivoPDF;
+
+    // Getters y Setters existentes
     public String getNumeroAsiento() { return numeroAsiento; }
     public void setNumeroAsiento(String numeroAsiento) { this.numeroAsiento = numeroAsiento; }
 
@@ -45,6 +55,22 @@ public class ConstitucionEmpresa {
 
     public LocalDate getFechaConstitucion() { return fechaConstitucion; }
     public void setFechaConstitucion(LocalDate fechaConstitucion) { this.fechaConstitucion = fechaConstitucion; }
+
+    public LocalDate getFechaPDF() { return fechaPDF; }
+    public void setFechaPDF(LocalDate fechaPDF) { this.fechaPDF = fechaPDF; }
+
+    public String getNombreArchivoPDF() { return nombreArchivoPDF; }
+    public void setNombreArchivoPDF(String nombreArchivoPDF) { this.nombreArchivoPDF = nombreArchivoPDF; }
+
+    public Path getRutaCompletaPDF(String directorioBase) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String rutaFecha = fechaPDF.format(formatter);
+
+        return Paths.get(directorioBase)
+                .resolve(rutaFecha)
+                .resolve(nombreArchivoPDF)
+                .normalize();
+    }
 
     @Override
     public String toString() {

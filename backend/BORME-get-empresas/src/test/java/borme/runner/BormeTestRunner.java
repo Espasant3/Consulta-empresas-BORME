@@ -1,4 +1,4 @@
-package borme.application.runner;
+package borme.runner;
 
 import borme.domain.ConstitucionEmpresa;
 import borme.repository.ConstitucionEmpresaRepository;
@@ -54,10 +54,11 @@ public class BormeTestRunner implements CommandLineRunner {
 
         testJpaGuardarConstitucion();
         testJpaBuscarPorClavePrimaria();
-        testJpaBuscarPorNombre();        // <- Usa findByNombreEmpresaContaining
-        testJpaBuscarPorFecha();         // <- Usa findByFechaConstitucionContaining
-        testJpaBuscarPorCapital();       // <- Usa findByCapitalMinimo
-        testJpaBuscarPorRangoFechas();   // <- Usa findByFechaConstitucionBetween
+        testJpaBuscarPorNombre();
+        testJpaBuscarPorFechaConstitucion();
+        testJpaBuscarPorFechaPDF();
+        testJpaBuscarPorCapital();
+        testJpaBuscarPorRangoFechas();
         testJpaActualizarRegistro();
         testJpaEliminarRegistro();
         testJpaConsultarTodos();
@@ -185,6 +186,8 @@ public class BormeTestRunner implements CommandLineRunner {
         empresa.setObjetoSocial("Desarrollo de software y consultoría IT");
         empresa.setDomicilio("Calle Prueba 123, Madrid");
         empresa.setCapital("30000.00 EUR");
+        empresa.setNombreArchivoPDF("INVENTADO-A-11111.pdf");
+        empresa.setFechaPDF(LocalDate.parse("2024-01-15"));
 
         try {
             ConstitucionEmpresa guardada = constitucionEmpresaRepository.save(empresa);
@@ -297,13 +300,30 @@ public class BormeTestRunner implements CommandLineRunner {
     }
 
 
-    private void testJpaBuscarPorFecha() {
-        System.out.println("\n--- Prueba JPA 4: Buscar por Fecha ---");
+    private void testJpaBuscarPorFechaConstitucion() {
+        System.out.println("\n--- Prueba JPA 4: Buscar por Fecha Constitución ---");
 
         try {
             // Usa findByFechaConstitucionContaining (que tienes con @Query)
             List<ConstitucionEmpresa> resultados = constitucionEmpresaRepository
                     .findByFechaConstitucion(LocalDate.parse("2024-01-15"));
+
+            System.out.println("✓ Encontradas " + resultados.size() + " empresas para la fecha:");
+            for (ConstitucionEmpresa emp : resultados) {
+                System.out.println("  - " + emp.getNombreEmpresa() + " (Fecha: " + emp.getFechaConstitucion() + ")");
+            }
+        } catch (Exception e) {
+            System.err.println("✗ Error buscando por fecha: " + e.getMessage());
+        }
+    }
+
+    private void testJpaBuscarPorFechaPDF() {
+        System.out.println("\n--- Prueba JPA 4 - 2: Buscar por Fecha PDF ---");
+
+        try {
+            // Usa findByFechaConstitucionContaining (que tienes con @Query)
+            List<ConstitucionEmpresa> resultados = constitucionEmpresaRepository
+                    .findByFechaPDF(LocalDate.parse("2024-01-15"));
 
             System.out.println("✓ Encontradas " + resultados.size() + " empresas para la fecha:");
             for (ConstitucionEmpresa emp : resultados) {

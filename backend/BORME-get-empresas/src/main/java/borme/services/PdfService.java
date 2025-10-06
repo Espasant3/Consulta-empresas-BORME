@@ -2,6 +2,7 @@ package borme.services;
 
 import borme.http.URLFetcher;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import java.io.IOException;
@@ -21,8 +22,13 @@ public class PdfService {
     @Autowired
     private BormeService bormeService;
 
-    // Directorio base centralizado aquí
-    private static final String DIRECTORIO_BASE = "pdfs_descargados";
+    @Value("${app.storage.pdf.path:pdfs_descargados}")
+    private String DIRECTORIO_BASE;
+
+    // O si prefieres mantener el control directo:
+    private Path getDirectorioBase() {
+        return Paths.get(DIRECTORIO_BASE);
+    }
 
     /**
      * Extrae URLs de PDFs del HTML del BORME para una fecha dada
@@ -116,7 +122,7 @@ public class PdfService {
      */
     public List<String> listarPdfsLocales(String fecha) {
         List<String> archivosLocales = new ArrayList<>();
-        Path directorioFecha = Paths.get(DIRECTORIO_BASE, fecha);
+        Path directorioFecha = getDirectorioBase().resolve(fecha);
 
         if (Files.exists(directorioFecha) && Files.isDirectory(directorioFecha)) {
             try (Stream<Path> stream = Files.list(directorioFecha)) {
@@ -139,11 +145,13 @@ public class PdfService {
      */
     private List<String> descargarPdfs(String fecha, List<String> urlsPdf) {
         List<String> archivosDescargados = new ArrayList<>();
-        Path directorioFecha = Paths.get(DIRECTORIO_BASE, fecha);
+
+        Path directorioFecha = getDirectorioBase().resolve(fecha);
 
         try {
             if (!Files.exists(directorioFecha)) {
                 Files.createDirectories(directorioFecha);
+                System.out.println("Directorio creado: " + directorioFecha.toAbsolutePath());
             }
         } catch (IOException e) {
             System.err.println("Error creando directorio: " + e.getMessage());
@@ -157,6 +165,7 @@ public class PdfService {
             if (Files.exists(rutaCompleta)) { // Situación deseablemente nunca posible
                 // Ya existe, no se descarga de nuevo
                 archivosDescargados.add(rutaCompleta.toString());
+                System.out.println("PDF ya existente: " + rutaCompleta);
                 continue;
             }
 

@@ -33,7 +33,7 @@ public class BormePdfParser {
      * Parsea constituciones de empresas del texto del PDF
      * @param textoPdf texto del PDF a parsear
      */
-    public List<ConstitucionEmpresa> parsearConstituciones(String textoPdf) {
+    public List<ConstitucionEmpresa> parsearConstituciones(String textoPdf, String nombrePDF, String fechaPDF) {
         List<ConstitucionEmpresa> constituciones = new ArrayList<>();
 
         if (textoPdf == null || textoPdf.trim().isEmpty()) {
@@ -52,7 +52,7 @@ public class BormePdfParser {
             // Verificar si es una constitución
             if (bloque.contains("Constitución.")) {
                 try {
-                    ConstitucionEmpresa constitucion = parsearBloqueConstitucion(bloque);
+                    ConstitucionEmpresa constitucion = parsearBloqueConstitucion(bloque, nombrePDF, fechaPDF);
                     if (constitucion != null && constitucion.getNumeroAsiento() != null) {
                         constituciones.add(constitucion);
                         System.out.println("Encontrada constitución: " + constitucion.getNombreEmpresa());
@@ -73,7 +73,7 @@ public class BormePdfParser {
      *
      */
 
-    private ConstitucionEmpresa parsearBloqueConstitucion(String bloque) {
+    private ConstitucionEmpresa parsearBloqueConstitucion(String bloque, String nombrePDF, String fechaPDF) {
         ConstitucionEmpresa constitucion = new ConstitucionEmpresa();
 
         // Extraer número y nombre (primera línea)
@@ -124,6 +124,10 @@ public class BormePdfParser {
         if (capitalMatcher.find()) {
             constitucion.setCapital(capitalMatcher.group(1).trim() + " Euros");
         }
+
+        constitucion.setNombreArchivoPDF(nombrePDF);
+
+        constitucion.setFechaPDF(normalizarFecha(fechaPDF));
 
         return constitucion;
     }
@@ -212,25 +216,30 @@ public class BormePdfParser {
         String fecha = fechaRaw.trim().replaceAll("[^\\d./-]", "");
 
         try {
+            // Formato ISO (YYYY-MM-DD)
+            if (fecha.matches("\\d{4}-\\d{2}-\\d{2}")) {
+                return LocalDate.parse(fecha);
+            }
+
             // Intentar detectar el formato
             if (fecha.matches("\\d{1,2}[./-]\\d{1,2}[./-]\\d{2}")) {
                 // Formato dd.mm.aa
                 String[] partes = fecha.split("[./-]");
                 int dia = Integer.parseInt(partes[0]);
                 int mes = Integer.parseInt(partes[1]);
-                int anio = Integer.parseInt(partes[2]);
+                int anho = Integer.parseInt(partes[2]);
 
                 // Asumir que años < 50 son del siglo XXI, > 50 del siglo XX
-                anio += (anio < 50) ? 2000 : (anio < 100) ? 1900 : 0;
+                anho += (anho < 50) ? 2000 : (anho < 100) ? 1900 : 0;
 
-                return LocalDate.of(anio, mes, dia);
+                return LocalDate.of(anho, mes, dia);
             } else if (fecha.matches("\\d{1,2}[./-]\\d{1,2}[./-]\\d{4}")) {
                 // Formato dd.mm.aaaa
                 String[] partes = fecha.split("[./-]");
                 int dia = Integer.parseInt(partes[0]);
                 int mes = Integer.parseInt(partes[1]);
-                int anio = Integer.parseInt(partes[2]);
-                return LocalDate.of(anio, mes, dia);
+                int anho = Integer.parseInt(partes[2]);
+                return LocalDate.of(anho, mes, dia);
             }
 
             // Si no coincide con ningún formato, devolver null

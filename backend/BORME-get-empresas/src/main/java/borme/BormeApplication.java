@@ -1,22 +1,18 @@
 package borme;
 
-import borme.application.runner.BormeIntegrationTest;
-import borme.application.runner.BormeTestRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.context.ConfigurableApplicationContext;
 
 @SpringBootApplication
 public class BormeApplication {
     public static void main(String[] args) {
-        ConfigurableApplicationContext context = SpringApplication.run(BormeApplication.class, args);
+        SpringApplication.run(BormeApplication.class, args);
 
-        // Ejecutar prueba automáticamente al iniciar
-        BormeTestRunner testRunner = context.getBean(BormeTestRunner.class);
-        testRunner.runTests();
-
-        BormeIntegrationTest bormeIntegrationTest = context.getBean(BormeIntegrationTest.class);
-        bormeIntegrationTest.runTests();
-
+        // Líneas no aptas para producción:
+        // ConfigurableApplicationContext context = SpringApplication.run(BormeApplication.class, args);
+        // BormeTestRunner testRunner = context.getBean(BormeTestRunner.class);
+        // testRunner.runTests();
+        // BormeIntegrationTest bormeIntegrationTest = context.getBean(BormeIntegrationTest.class);
+        // bormeIntegrationTest.runTests();
     }
 }

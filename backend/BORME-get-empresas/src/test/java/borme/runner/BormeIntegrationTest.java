@@ -1,4 +1,4 @@
-package borme.application.runner;
+package borme.runner;
 
 import borme.domain.ConstitucionEmpresa;
 import borme.domain.ConstitucionEmpresaId;
