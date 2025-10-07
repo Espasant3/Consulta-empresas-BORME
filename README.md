@@ -35,6 +35,23 @@ Este repositorio contiene los programas desarrollados para, dado un día concret
 
 ## Uso
 
+### Dar permisos a los scripts
+chmod +x deploy.sh manage.sh
+
+### Desplegar completo (recomendado)
+./deploy.sh
+
+### O usar el gestor para operaciones específicas
+./manage.sh start     # Iniciar servicios
+./manage.sh status    # Ver estado
+./manage.sh logs      # Ver logs
+./manage.sh stop      # Detener servicios
+
+### Comandos Docker Compose V2 directos
+docker compose ps              # Estado de servicios
+docker compose logs -f backend # Logs del backend
+docker compose restart backend # Reiniciar solo backend
+
 
 ### Comandos útiles
 
