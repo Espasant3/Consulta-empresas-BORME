@@ -1,0 +1,7 @@
+# Solo excluir lo realmente innecesario
+.gradle/
+build/
+.idea/
+pdfs_descargados/
+*.log
+.git/
