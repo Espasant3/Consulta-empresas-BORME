@@ -15,20 +15,23 @@
 
 * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
 }
-
 body {
     margin: 0;
     padding: 0;
     min-height: 100vh;
-    width: 100%;
+    width: 100vw;
+    overflow-x: hidden;
 }
 
 #app {
     width: 100%;
     min-height: 100vh;
+    padding: 1rem;
     margin: 0;
-    padding: 0;
+    box-sizing: border-box;
 }
 
 /* Asegurar que todos los elementos usen border-box */
@@ -52,13 +55,6 @@ h1 {
 
 .card {
   padding: 2em;
-}
-
-#app {
-  max-width: 1280px;
-  margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
 }
 
 button {
@@ -91,4 +87,24 @@ button:focus-visible {
   button {
     background-color: #f9f9f9;
   }
+}
+
+/* Scrollbar personalizada para toda la aplicación */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #94a3b8;
 }

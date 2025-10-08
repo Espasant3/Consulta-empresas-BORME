@@ -1,14 +1,15 @@
 <script>
-    import {
-        companies,
-        filteredCompanies,
-        expandedCompanyId,
-        toggleCompanyExpansion,
-        generateCompanyId
-    } from '$lib/stores/companies';
-    import ColumnFilters from './ColumnFilters.svelte';
+    import { recentSearchResults, expandedCompanyId, toggleCompanyExpansion, generateCompanyId } from '$lib/stores/companies';
     import { companyService } from '$lib/services/api';
 
+    let recentFilters = {
+        numeroAsiento: '',
+        fechaConstitucion: '',
+        nombreEmpresa: '',
+        objetoSocial: '',
+        domicilio: '',
+        capital: ''
+    };
 
     function handleRowClick(company) {
         const companyId = generateCompanyId(company);
@@ -20,20 +21,40 @@
         return text.length > maxLength ? text.substring(0, maxLength) + '...' : text;
     }
 
-    // Helper para obtener companies count de forma segura
-    $: companiesCount = $companies ? $companies.length : 0;
-    $: filteredCount = $filteredCompanies ? $filteredCompanies.length : 0;
+    function handleFilterChange(key, event) {
+        recentFilters = { ...recentFilters, [key]: event.target.value };
+    }
+
+    function clearRecentFilters() {
+        recentFilters = {
+            numeroAsiento: '',
+            fechaConstitucion: '',
+            nombreEmpresa: '',
+            objetoSocial: '',
+            domicilio: '',
+            capital: ''
+        };
+    }
+
+    // Filtrado local de resultados recientes
+    $: filteredRecentResults = $recentSearchResults ? $recentSearchResults.filter(company => {
+        return Object.entries(recentFilters).every(([key, value]) => {
+            if (!value) return true;
+            const companyValue = company[key] || '';
+            return companyValue.toString().toLowerCase().includes(value.toLowerCase());
+        });
+    }) : [];
 </script>
 
-<div class="table-wrapper">
-    <div class="table-container">
-        <div class="table-header">
-            <h3>Lista de Constituciones</h3>
-            <div class="table-stats">
-                <span class="count-badge">Mostrando: {filteredCount} de {companiesCount}</span>
-            </div>
+<div class="recent-results-section">
+    <div class="section-header">
+        <h3>Resultados de la Última Consulta</h3>
+        <div class="section-info">
+            <span class="company-count">Encontrados: {filteredRecentResults.length}</span>
         </div>
+    </div>
 
+    <div class="table-container">
         <div class="table-scroll-container">
             <div class="table-grid">
                 <!-- Headers -->
@@ -46,11 +67,76 @@
                 <div class="header-cell">Acciones</div>
 
                 <!-- Filtros -->
-                <ColumnFilters />
+                <div class="filters-row">
+                    <div class="filter-cell">
+                        <input
+                                type="text"
+                                value={recentFilters.numeroAsiento}
+                                on:input={(e) => handleFilterChange('numeroAsiento', e)}
+                                placeholder="Filtrar asiento..."
+                                class="filter-input"
+                        />
+                    </div>
+
+                    <div class="filter-cell">
+                        <input
+                                type="date"
+                                value={recentFilters.fechaConstitucion}
+                                on:input={(e) => handleFilterChange('fechaConstitucion', e)}
+                                class="filter-input"
+                        />
+                    </div>
+
+                    <div class="filter-cell">
+                        <input
+                                type="text"
+                                value={recentFilters.nombreEmpresa}
+                                on:input={(e) => handleFilterChange('nombreEmpresa', e)}
+                                placeholder="Filtrar nombre..."
+                                class="filter-input"
+                        />
+                    </div>
+
+                    <div class="filter-cell">
+                        <input
+                                type="text"
+                                value={recentFilters.objetoSocial}
+                                on:input={(e) => handleFilterChange('objetoSocial', e)}
+                                placeholder="Filtrar objeto social..."
+                                class="filter-input"
+                        />
+                    </div>
+
+                    <div class="filter-cell">
+                        <input
+                                type="text"
+                                value={recentFilters.domicilio}
+                                on:input={(e) => handleFilterChange('domicilio', e)}
+                                placeholder="Filtrar domicilio..."
+                                class="filter-input"
+                        />
+                    </div>
+
+                    <div class="filter-cell">
+                        <input
+                                type="text"
+                                value={recentFilters.capital}
+                                on:input={(e) => handleFilterChange('capital', e)}
+                                placeholder="Filtrar capital..."
+                                class="filter-input"
+                        />
+                    </div>
+
+                    <div class="filter-cell actions">
+                        <button on:click={clearRecentFilters} class="clear-filters-btn" title="Limpiar filtros">
+                            🗑️
+                        </button>
+                    </div>
+                </div>
 
                 <!-- Filas de datos -->
-                {#if $filteredCompanies}
-                    {#each $filteredCompanies as company}
+                {#if filteredRecentResults.length > 0}
+                    {#each filteredRecentResults as company}
                         <div class="data-row {$expandedCompanyId === generateCompanyId(company) ? 'expanded' : ''}">
                             <div class="data-cell" title={company.numeroAsiento}>
                                 {company.numeroAsiento}
@@ -124,24 +210,24 @@
                                         <div class="detail-item full-width">
                                             <label>Archivo PDF:</label>
                                             <span>
-                                            {#if  companyService.getPdfUrl(company)}
-                                              <a
-                                                      href={companyService.getPdfUrl(company)}
-                                                      target="_blank"
-                                                      rel="noopener noreferrer"
-                                                      class="pdf-link"
-                                                      title="Abrir PDF original en nueva pestaña"
-                                                      on:click|preventDefault={(e) => {
-                                                  e.preventDefault();
-                                                  window.open(companyService.getPdfUrl(company), '_blank');
-                                                }}
-                                              >
-                                                📄 {company.nombreArchivoPDF || 'Ver PDF'}
-                                              </a>
-                                            {:else}
-                                              <span class="no-pdf">PDF no disponible</span>
-                                            {/if}
-                                          </span>
+                        {#if companyService.getPdfUrl(company)}
+                          <a
+                                  href={companyService.getPdfUrl(company)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  class="pdf-link"
+                                  title="Abrir PDF original en nueva pestaña"
+                                  on:click|preventDefault={(e) => {
+                              e.preventDefault();
+                              window.open(companyService.getPdfUrl(company), '_blank');
+                            }}
+                          >
+                            📄 {company.nombreArchivoPDF || 'Ver PDF'}
+                          </a>
+                        {:else}
+                          <span class="no-pdf">PDF no disponible</span>
+                        {/if}
+                      </span>
                                         </div>
                                     </div>
                                 </div>
@@ -152,12 +238,12 @@
             </div>
         </div>
 
-        {#if !$filteredCompanies || $filteredCompanies.length === 0}
+        {#if filteredRecentResults.length === 0}
             <div class="no-results">
-                {#if $companies.length === 0}
+                {#if $recentSearchResults.length === 0}
                     <div class="empty-state">
-                        <h3>No hay constituciones almacenadas</h3>
-                        <p>Utiliza la sección superior para consultar constituciones por fecha del BORME</p>
+                        <h3>No se han realizado consultas</h3>
+                        <p>Utiliza el formulario superior para consultar constituciones por fecha del BORME</p>
                     </div>
                 {:else}
                     <div class="no-matches">
@@ -171,6 +257,120 @@
 </div>
 
 <style>
+    .recent-results-section {
+        background: white;
+        border-radius: 0.5rem;
+        box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+        overflow: hidden;
+        margin-bottom: 1.5rem;
+    }
+
+    .section-header {
+        background: #f8fafc;
+        padding: 1.25rem 1.5rem;
+        border-bottom: 1px solid #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 1rem;
+    }
+
+    .section-header h3 {
+        margin: 0;
+        color: #1e293b;
+        font-size: 1.375rem;
+    }
+
+    .section-info {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+    }
+
+    .company-count {
+        background: #10b981;
+        color: white;
+        padding: 0.5rem 1rem;
+        border-radius: 2rem;
+        font-size: 0.875rem;
+        font-weight: 600;
+    }
+
+    .table-container {
+        display: flex;
+        flex-direction: column;
+        min-height: 200px;
+    }
+
+    .table-scroll-container {
+        overflow-x: auto;
+    }
+
+    .table-grid {
+        display: grid;
+        grid-template-columns: 0.8fr 0.8fr 1.5fr 2fr 1.5fr 0.8fr 0.5fr;
+        min-width: 1000px;
+    }
+
+    .header-cell {
+        background: #059669;
+        color: white;
+        padding: 0.75rem;
+        font-weight: 600;
+        font-size: 0.875rem;
+        text-align: left;
+        border-bottom: 1px solid #047857;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+
+    .filters-row {
+        display: contents;
+    }
+
+    .filter-cell {
+        padding: 0.5rem;
+        background: #f0fdf4;
+        border-bottom: 2px solid #dcfce7;
+    }
+
+    .filter-cell.actions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .filter-input {
+        width: 100%;
+        padding: 0.5rem;
+        border: 1px solid #bbf7d0;
+        border-radius: 0.375rem;
+        font-size: 0.875rem;
+        background: white;
+    }
+
+    .filter-input:focus {
+        outline: none;
+        border-color: #10b981;
+        box-shadow: 0 0 0 2px rgb(16 185 129 / 0.1);
+    }
+
+    .clear-filters-btn {
+        background: #6b7280;
+        color: white;
+        border: none;
+        border-radius: 0.375rem;
+        padding: 0.5rem;
+        cursor: pointer;
+        font-size: 0.875rem;
+    }
+
+    .clear-filters-btn:hover {
+        background: #4b5563;
+    }
+
     .table-wrapper {
         width: 100%;
         margin: 0;

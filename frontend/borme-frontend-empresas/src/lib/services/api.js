@@ -1,66 +1,138 @@
-// Datos mock completos para desarrollo
-const mockCompanies = [
-    {
-        id: 1,
-        name: 'ARQTEC SOLUCIONES SL',
-        creationDate: '2025-07-31',
-        businessObject: '1. Intermediación de servicios en los campos de Arquitectura, Urbanismo e Ingeniería, con relación a la elaboración de proyectos, mediante contratación de técnicos competentes, adquisición, urbanización y venta de terrenos, la promoción y venta de inmuebles: la compra, venta, arriendo y subarriendo.',
-        address: 'C/ CEDACEROS 4-10 BAJO A (ORIHUELA)',
-        capital: '324.768,79',
-        operationStartDate: '31.07.25',
-        solePartnerDeclaration: 'Declaración de unipersonalidad',
-        solePartner: 'MONTESINOS Y ESQUIVA SA',
-        soleAdministrator: 'MONTESINOS VARO DIEGO',
-        registryData: 'S 8, H A 199948, I/A 1 (25.08.25)',
-        pdfUrl: '#'
-    },
-    {
-        id: 2,
-        name: 'NOBILE INSTALACIONES SL',
-        creationDate: '2025-08-01',
-        businessObject: 'Instalación de carpintería',
-        address: 'C/ JAIME SEGARRA 61.49 IZ (ALICANTE)',
-        capital: '3.000,00',
-        operationStartDate: '01.08.25',
-        solePartnerDeclaration: 'Declaración de unipersonalidad',
-        solePartner: 'RODRIGUEZ CONTRERAS CARLOS HUMBERTO',
-        soleAdministrator: 'RODRIGUEZ CONTRERAS CARLOS HUMBERTO',
-        registryData: 'S 8, H A 199956, I/A 1 (25.08.25)',
-        pdfUrl: '#'
+const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080/api';
+
+// Helper para hacer fetch con manejo de errores mejorado
+async function fetchAPI(endpoint, options = {}) {
+    const url = `${API_BASE}${endpoint}`;
+
+    console.log(`Making API call to: ${url}`);
+
+    try {
+        const response = await fetch(url, {
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers,
+            },
+            ...options,
+        });
+
+        if (!response.ok) {
+            const errorText = await response.text();
+            throw new Error(`HTTP ${response.status}: ${errorText || response.statusText}`);
+        }
+
+        const data = await response.json();
+        console.log(`API response from ${url}:`, data);
+        return data;
+    } catch (error) {
+        console.error(`API call failed for ${url}:`, error);
+        throw error;
     }
-];
+}
+
+// Función para normalizar la respuesta de empresas (siempre devuelve array)
+function normalizeCompaniesResponse(data) {
+    if (Array.isArray(data)) {
+        return data;
+    }
+
+    // Si es un objeto, buscar posibles propiedades que contengan el array
+    if (data && typeof data === 'object') {
+        if (Array.isArray(data.empresas)) return data.empresas;
+        if (Array.isArray(data.data)) return data.data;
+        if (Array.isArray(data.content)) return data.content;
+        if (Array.isArray(data.result)) return data.result;
+
+        // Si tiene una única propiedad que es array, devolverla
+        const arrayProps = Object.values(data).filter(Array.isArray);
+        if (arrayProps.length === 1) return arrayProps[0];
+    }
+
+    console.warn('Could not normalize companies response, returning empty array:', data);
+    return [];
+}
 
 export const companyService = {
-    async getCompanies(date = '') {
-        console.log('Using mock data for companies');
-        // Simular delay de red
-        await new Promise(resolve => setTimeout(resolve, 500));
-
-        if (date) {
-            return mockCompanies.filter(company => company.creationDate === date);
-        }
-        return mockCompanies;
+    // Obtener todas las constituciones almacenadas
+    async getAllCompanies() {
+        const data = await fetchAPI('/empresas');
+        return normalizeCompaniesResponse(data);
     },
 
-    async getCompanyById(id) {
-        console.log('Getting company by ID:', id);
-        // Simular delay de red
-        await new Promise(resolve => setTimeout(resolve, 300));
-
-        const company = mockCompanies.find(company => company.id === parseInt(id));
-        if (!company) {
-            throw new Error('Company not found');
-        }
-        return company;
+    // Consultar constituciones por fecha específica
+    async getCompaniesByDate(date) {
+        if (!date) throw new Error('La fecha es requerida');
+        const data = await fetchAPI(`/empresas/fecha/${date}`);
+        return normalizeCompaniesResponse(data);
     },
 
-    async searchCompanies(query) {
-        await new Promise(resolve => setTimeout(resolve, 300));
-        const lowerQuery = query.toLowerCase();
-        return mockCompanies.filter(company =>
-            company.name.toLowerCase().includes(lowerQuery) ||
-            company.businessObject.toLowerCase().includes(lowerQuery) ||
-            company.address.toLowerCase().includes(lowerQuery)
-        );
+    // Obtener detalles de una constitución específica
+    async getCompanyDetail(numeroAsiento, fechaConstitucion) {
+        if (!numeroAsiento || !fechaConstitucion) {
+            throw new Error('Número de asiento y fecha de constitución son requeridos');
+        }
+        return await fetchAPI(`/empresas/${numeroAsiento}/${fechaConstitucion}`);
+    },
+
+    // Buscar constituciones por nombre
+    async searchCompaniesByName(query) {
+        if (!query) return this.getAllCompanies();
+        const data = await fetchAPI(`/empresas/buscar?nombre=${encodeURIComponent(query)}`);
+        return normalizeCompaniesResponse(data);
+    },
+
+    // Obtener estadísticas
+    async getStatistics() {
+        return await fetchAPI('/empresas/estadisticas');
+    },
+
+    // Verificar si existe un PDF
+    async checkPdfExists(fecha, nombreArchivo) {
+        if (!fecha || !nombreArchivo) return false;
+
+        try {
+            const response = await fetch(`${API_BASE}/pdfs/${fecha}/${nombreArchivo}/existe`);
+            return response.ok;
+        } catch (error) {
+            console.error('Error checking PDF existence:', error);
+            return false;
+        }
+    },
+
+    // Obtener URL del PDF para visualización
+    getPdfUrl(company) {
+        if (!company) return null;
+
+        // Prioridad 1: Si la empresa ya tiene una URL de PDF completa
+        if (company.urlPDF) {
+            return company.urlPDF.startsWith('http')
+                ? company.urlPDF
+                : `${company.urlPDF.startsWith('/') ? '' : '/'}${company.urlPDF}`;
+        }
+
+        // Prioridad 2: Construir la URL usando fechaPDF y nombreArchivoPDF
+        if (company.fechaPDF && company.nombreArchivoPDF) {
+            const formattedFecha = company.fechaPDF.replace(/-/g, '/');
+            return `${API_BASE}/pdfs/${formattedFecha}/${company.nombreArchivoPDF}`;
+        }
+
+        console.warn('No PDF URL available for company:', company);
+        return null;
+    },
+
+    // Consultar BORME para una fecha específica (HTML crudo)
+    async getBormeRaw(fecha) {
+        if (!fecha) throw new Error('La fecha es requerida');
+        return await fetchAPI(`/borme/${fecha}`);
+    },
+
+    // Validar si una fecha es válida para consultar el BORME
+    async validateBormeDate(fecha) {
+        if (!fecha) throw new Error('La fecha es requerida');
+        return await fetchAPI(`/borme/validar/${fecha}`);
     }
 };
+
+// Función para generar ID único
+export function generateCompanyId(company) {
+    return `${company.fechaConstitucion}-${company.numeroAsiento}`;
+}
