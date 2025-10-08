@@ -42,7 +42,7 @@ public class BormePdfParser {
 
         textoPdf = preprocesarTextoBORME(textoPdf);
 
-        // Primero: dividir en bloques por empresa (cada bloque empieza con "NNNNNN - ")
+        // Dividir en bloques por empresa (cada bloque empieza con "NNNNNN - ")
         Pattern bloquePattern = Pattern.compile("(\\d{6}\\s*-\\s*[^\\n]+(?:\\n(?!\\d{6}\\s*-)[^\\n]*)*)", Pattern.MULTILINE);
         Matcher bloqueMatcher = bloquePattern.matcher(textoPdf);
 

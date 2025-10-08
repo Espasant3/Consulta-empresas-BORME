@@ -20,5 +20,5 @@ CREATE INDEX IF NOT EXISTS idx_borme_fecha_constitucion ON public.borme_constitu
 CREATE INDEX IF NOT EXISTS idx_borme_nombre_empresa ON public.borme_constitucion_empresa(nombre_empresa);
 CREATE INDEX IF NOT EXISTS idx_borme_fecha_pdf ON public.borme_constitucion_empresa(fecha_pdf);
 
--- Asegurar que el usuario tiene permisos (esto se ejecutará sin error si ya existe)
+-- Asegurar que el usuario tiene permisos
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO borme_user;

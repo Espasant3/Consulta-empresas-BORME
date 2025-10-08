@@ -1,14 +1,14 @@
 # Consulta empresas del BORME
 
-Este repositorio contiene los programas desarrollados para, dado un día concreto en formato "YYYY-MM-DD", localizar las constituciones de sociedades publicadas en los ficheros PDF del BORME, descargarlas, extraer su información de forma estructurada y exponerlas a través de una API para su posterior consulta desde un frontend por determinar.
+Este repositorio contiene los programas desarrollados para, dado un día concreto en formato "YYYY-MM-DD", localizar las constituciones de sociedades publicadas en los ficheros PDF del BORME, descargarlas, extraer su información de forma estructurada y exponerlas a través de una API para su posterior consulta desde una interfaz web en Svelte, que muestra los resultados en una tabla con distintos filtros, y permite acceder al detalle de cada constitución, incluyendo la visualización del PDF original.
 
 ## Tabla de contenidos
 
 - [Requisitos](#requisitos)
 - [Preparación del entorno](#preparación-del-entorno)
   - [Requisitos Previos](#requisitos-previos)
-  - [Docker](#docker)
 - [Uso](#uso)
+- [API REFERENCE](#api-reference)
 
 
 
@@ -32,65 +32,58 @@ Este repositorio contiene los programas desarrollados para, dado un día concret
 - **Docker Compose 2.40**  
   (plugin de Docker, utilizado mediante `docker compose`)
 
+### Entorno de pruebas
 
-
-
-
-### Docker
+Esta aplicación ha sido probada en Ubuntu 24.04 pero debería ser capaz de ejecutarse en cualquier distribución de Linux si se hace mediante Docker.
 
 
 ## Uso
 
 ### Dar permisos a los scripts
-chmod +x deploy.sh manage.sh
 
-### Desplegar completo (recomendado)
+```bash
+chmod +x deploy.sh manage.sh
+```
+
+### Desplegar completo
+```bash
 ./deploy.sh
+```
 
 ### O usar el gestor para operaciones específicas
+```bash
 ./manage.sh start     # Iniciar servicios
+```
+```bash
 ./manage.sh status    # Ver estado
+```
+```bash
 ./manage.sh logs      # Ver logs
+```
+```bash
 ./manage.sh stop      # Detener servicios
+```
+```bash
+./manage.sh stopAll    # Detener servicios y borrar volúmenes
+```
 
 ### Comandos Docker Compose V2 directos
-docker compose ps              # Estado de servicios
-docker compose logs -f backend # Logs del backend
-docker compose restart backend # Reiniciar solo backend
+```bash
+docker compose ps               # Estado de servicios
+```
+```bash
+docker compose logs -f <service>  # Logs del servicio (backend, frontend, database)
+```
+```bash
+docker compose restart <service>  # Reiniciar solo el servicio indicado (backend, frontend, database)
+```
+
+### Acceso a la aplicación
+Una vez desplegado, se puede acceder a la aplicación en [http://localhost](http://localhost)
 
 
-### Comandos útiles
 
-
-# Construir y ejecutar localmente
-./gradlew bootRun
-
-# Construir JAR
-./gradlew bootJar
-
-# Ejecutar tests
-./gradlew test
-
-# Construir con Docker
-docker build -t borme-scraper .
-
-# Ejecutar con Docker
-docker run -p 8080:8080 -v $(pwd)/pdfs_descargados:/app/pdfs_descargados borme-scraper
-
-# Ejecutar todo con Docker Compose
-docker-compose up -d
-
-# Ver logs
-docker-compose logs -f borme-scraper
-
-# Parar servicios
-docker-compose down
-
-# Limpiar completamente
-docker-compose down -v
-
-
-## 📚 API Reference
+## API Reference
 
 ### Endpoints Disponibles
 

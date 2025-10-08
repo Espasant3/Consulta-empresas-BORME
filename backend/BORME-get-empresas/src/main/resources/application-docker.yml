@@ -1,0 +1,8 @@
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health  # Solo se expone /health (seguro y suficiente)
+  endpoint:
+    health:
+      show-details: never  # No se muestran detalles sensibles

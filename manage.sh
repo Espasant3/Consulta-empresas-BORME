@@ -23,6 +23,7 @@ show_usage() {
     echo "Comandos disponibles:"
     echo "  start     - Desplegar servicios (docker compose up -d)"
     echo "  stop      - Detener servicios (docker compose down)"
+    echo "  stopAll   - Detener servicios y eliminar volúmenes (docker compose down -v --remove-orphans)"
     echo "  restart   - Reiniciar servicios (docker compose restart)"
     echo "  logs      - Mostrar logs (docker compose logs -f)"
     echo "  status    - Estado de los servicios (docker compose ps)"
@@ -34,6 +35,7 @@ show_usage() {
     echo "  $0 start      # Desplegar la aplicación"
     echo "  $0 logs       # Ver logs en tiempo real"
     echo "  $0 stop       # Detener la aplicación"
+    echo "  $0 stopAll    # Detener y borrar volúmenes"
 }
 
 case "$1" in
@@ -45,6 +47,11 @@ case "$1" in
     stop)
         log_info "Deteniendo servicios..."
         docker compose down
+        ;;
+    stopAll)
+        log_warn "Deteniendo servicios y eliminando volúmenes..."
+        docker compose down -v --remove-orphans
+        log_info "Servicios y volúmenes eliminados correctamente."
         ;;
     restart)
         log_info "Reiniciando servicios..."

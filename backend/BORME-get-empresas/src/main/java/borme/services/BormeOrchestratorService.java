@@ -26,8 +26,7 @@ public class BormeOrchestratorService {
     private ConstitucionEmpresaService constitucionEmpresaService;
 
     /**
-     * Tu método existente - perfecto como está
-     * Este ya hace exactamente lo que necesitas: consulta BD y si no hay datos, los procesa
+     * Consulta BD y si no hay datos, los procesa
      */
     public List<ConstitucionEmpresa> procesarBormeCompleto(String fecha) {
         System.out.println("=== ORQUESTANDO PROCESAMIENTO BORME PARA: " + fecha + " ===");
@@ -36,23 +35,23 @@ public class BormeOrchestratorService {
 
         // Verificar si ya existen datos en BD para esta fecha
         if (constitucionEmpresaService.existenConstitucionesParaFecha(fechaLocalDate)) {
-            System.out.println("✅ Ya existen constituciones en BD para " + fecha + ". Recuperando desde BD...");
+            System.out.println("Ya existen constituciones en BD para " + fecha + ". Recuperando desde BD...");
             return constitucionEmpresaService.obtenerConstitucionesPorFecha(fechaLocalDate);
         }
 
         // No hay datos en BD, procesar desde PDFs
-        System.out.println("📋 No hay constituciones en BD para " + fecha + ". Procesando desde PDFs...");
+        System.out.println("No hay constituciones en BD para " + fecha + ". Procesando desde PDFs...");
 
         List<ConstitucionEmpresa> constitucionesExtraidas = new ArrayList<>();
 
         try {
             // Obtener PDFs del BORME
             List<String> archivosPdf = pdfService.obtenerPdfsDelBorme(fecha);
-            System.out.println("📄 PDFs a procesar: " + archivosPdf.size());
+            System.out.println("PDFs a procesar: " + archivosPdf.size());
 
             // Procesar cada PDF
             for (String archivoPdf : archivosPdf) {
-                System.out.println("🔍 Procesando PDF: " + archivoPdf);
+                System.out.println("Procesando PDF: " + archivoPdf);
                 String textoPdf = pdfParser.extraerTextoPdf(archivoPdf);
 
                 if (textoPdf != null) {
@@ -62,11 +61,11 @@ public class BormeOrchestratorService {
             }
 
             // Guardar en BD las constituciones extraídas y devolverlas
-            System.out.println("💾 Guardando " + constitucionesExtraidas.size() + " constituciones en BD...");
+            System.out.println("Guardando " + constitucionesExtraidas.size() + " constituciones en BD...");
             return constitucionEmpresaService.guardarConstituciones(constitucionesExtraidas);
 
         } catch (Exception e) {
-            System.err.println("💥 Error en procesamiento: " + e.getMessage());
+            System.err.println("Error en procesamiento: " + e.getMessage());
             throw new RuntimeException("Error procesando BORME: " + e.getMessage(), e);
         }
     }

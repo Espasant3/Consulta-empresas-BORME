@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/pdfs")
+@RequestMapping("/pdfs")
 @CrossOrigin(origins = "*")
 public class PdfController {
 

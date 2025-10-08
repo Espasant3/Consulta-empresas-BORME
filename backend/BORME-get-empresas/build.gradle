@@ -17,6 +17,10 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 
+    implementation 'org.springframework.boot:spring-boot-starter-actuator'
+
+
+
     // Procesamiento de PDFs
     implementation 'org.apache.pdfbox:pdfbox:2.0.29'
 
@@ -48,3 +52,4 @@ bootJar {
 tasks.withType(JavaCompile) {
     options.encoding = 'UTF-8'
 }
+

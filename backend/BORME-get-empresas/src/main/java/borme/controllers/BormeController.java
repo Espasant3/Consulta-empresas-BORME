@@ -9,7 +9,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 @RestController
-@RequestMapping("/api/borme")
+@RequestMapping("/borme")
 @CrossOrigin(origins = "*") // Para el frontend Svelte
 public class BormeController {
 

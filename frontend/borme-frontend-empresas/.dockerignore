@@ -3,4 +3,7 @@ dist
 .git
 .dockerignore
 Dockerfile
-
+*.log
+.env
+.env.*
+!.env.production
