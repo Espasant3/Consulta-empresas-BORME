@@ -49,8 +49,14 @@ public class BormePdfParser {
         while (bloqueMatcher.find()) {
             String bloque = bloqueMatcher.group(1);
 
+            // Verificar que "Constitución." aparezca justo después del nombre de la empresa
+            Pattern patronConstitucionReal = Pattern.compile(
+                    "^\\d{6}\\s*-\\s*[^\\n]*\\n\\s*Constitución\\.",
+                    Pattern.MULTILINE
+            );
+
             // Verificar si es una constitución
-            if (bloque.contains("Constitución.")) {
+            if (patronConstitucionReal.matcher(bloque).find()) {
                 try {
                     ConstitucionEmpresa constitucion = parsearBloqueConstitucion(bloque, nombrePDF, fechaPDF);
                     if (constitucion != null && constitucion.getNumeroAsiento() != null) {
@@ -140,8 +146,10 @@ public class BormePdfParser {
     private String preprocesarTextoBORME(String texto) {
         if (texto == null) return "";
 
-        // Normalizar todos los espacios en blanco (espacios, tabs, saltos de línea) en un solo espacio
-        texto = texto.replaceAll("\\s+", " ").trim();
+        // Normalizar saltos de línea, pero no eliminarlos
+        texto = texto.replaceAll("\\r\\n", "\n")
+                .replaceAll("\\r", "\n")
+                .replaceAll("[ \\t]+", " "); // solo espacios horizontales
 
         // Eliminar cabeceras completas del Boletín Oficial
         texto = texto.replaceAll(
